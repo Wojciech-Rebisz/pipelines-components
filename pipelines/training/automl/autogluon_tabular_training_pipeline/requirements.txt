@@ -14,11 +14,11 @@ apsw==3.53.2.0
 apswutils==0.1.2
 asttokens==3.0.1
 attrs==26.1.0
-autogluon.common==1.5.0+rhaiv.3
-autogluon.core==1.5.0+rhaiv.3
-autogluon.features==1.5.0+rhaiv.3
-autogluon.tabular==1.5.0+rhaiv.3
-autogluon.timeseries==1.5.0+rhaiv.3
+autogluon.common @ git+https://github.com/Wojciech-Rebisz/autogluon.git@dev-update-transformers-and-dependencies#subdirectory=common
+autogluon.core @ git+https://github.com/Wojciech-Rebisz/autogluon.git@dev-update-transformers-and-dependencies#subdirectory=core
+autogluon.features @ git+https://github.com/Wojciech-Rebisz/autogluon.git@dev-update-transformers-and-dependencies#subdirectory=features
+autogluon.tabular @ git+https://github.com/Wojciech-Rebisz/autogluon.git@dev-update-transformers-and-dependencies#subdirectory=tabular
+autogluon.timeseries @ git+https://github.com/Wojciech-Rebisz/autogluon.git@dev-update-transformers-and-dependencies#subdirectory=timeseries
 beartype==0.22.9
 beautifulsoup4==4.14.3
 blis==1.3.3
