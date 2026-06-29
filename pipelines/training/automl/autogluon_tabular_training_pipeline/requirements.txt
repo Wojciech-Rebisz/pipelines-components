@@ -28,7 +28,6 @@ catalogue==2.0.10
 certifi==2026.5.20
 cffi==2.0.0
 charset-normalizer==3.4.7
-chronos-forecasting==2.2.2
 click==8.4.1
 click-option-group==0.5.7
 cloudpathlib==0.24.0

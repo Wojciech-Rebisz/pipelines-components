@@ -19,6 +19,6 @@ COPY pipelines/training/automl/autogluon_tabular_training_pipeline/requirements.
      pipelines/training/automl/autogluon_tabular_training_pipeline/requirements-pypi.txt \
      /tmp/
 
-## Ensure build isolation
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
+## Install PyPI-only packages first (e.g. chronos-forecasting) before RH index resolution.
 RUN pip install --index-url https://pypi.org/simple --no-cache-dir -r /tmp/requirements-pypi.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
