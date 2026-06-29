@@ -1,4 +1,4 @@
---index-url https://console.redhat.com/api/pypi/public-rhai/rhoai/3.5-EA2/cpu-ubi9/simple
+--index-url https://console.redhat.com/api/pypi/public-rhai/rhoai/3.5/cpu-ubi9/simple
 
 absl-py==2.4.0
 accelerate==1.13.0
@@ -28,6 +28,7 @@ catalogue==2.0.10
 certifi==2026.5.20
 cffi==2.0.0
 charset-normalizer==3.4.7
+chronos-forecasting==2.3.0
 click==8.4.1
 click-option-group==0.5.7
 cloudpathlib==0.24.0
@@ -176,7 +177,7 @@ traitlets==5.15.1
 transformers==5.10.1
 triad==1.0.2
 triton==3.6.0; platform_machine != 's390x'
-typer==0.26.7
+typer==0.25.1
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 tzdata==2026.2
