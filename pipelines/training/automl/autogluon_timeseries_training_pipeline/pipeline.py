@@ -38,8 +38,8 @@ def autogluon_timeseries_training_pipeline(
     train_data_bucket_name: str,
     train_data_file_key: str,
     target: str,
-    id_column: str,
     timestamp_column: str,
+    id_column: str = "",
     known_covariates_names: List[str] = [],
     prediction_length: int = 1,
     top_n: int = 3,
@@ -171,7 +171,7 @@ def autogluon_timeseries_training_pipeline(
     # Resource limits differ by preset: medium_quality needs more CPU/memory.
     _training_kwargs = dict(
         target=target,
-        id_column=id_column,
+        id_column=data_loader_task.outputs["effective_id_column"],
         timestamp_column=timestamp_column,
         train_data_path=data_loader_task.outputs["models_selection_train_data_path"],
         test_data=data_loader_task.outputs["sampled_test_dataset"],

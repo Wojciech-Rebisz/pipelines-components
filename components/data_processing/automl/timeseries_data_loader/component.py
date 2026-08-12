@@ -13,10 +13,10 @@ def timeseries_data_loader(
     bucket_name: str,
     workspace_path: str,
     target: str,
-    id_column: str,
     timestamp_column: str,
     sampled_test_dataset: dsl.Output[dsl.Dataset],
     component_status: dsl.Output[dsl.Artifact],
+    id_column: str = "",
     selection_train_size: float = 0.3,
 ) -> NamedTuple(
     "outputs",
@@ -25,6 +25,7 @@ def timeseries_data_loader(
     sample_rows=str,
     models_selection_train_data_path=str,
     extra_train_data_path=str,
+    effective_id_column=str,
 ):
     """Load and split timeseries data from S3 for AutoGluon training.
 
@@ -77,17 +78,21 @@ def timeseries_data_loader(
     PANDAS_CHUNK_SIZE = 10000  # Rows per batch for streaming read
     DEFAULT_TEST_SIZE = 0.2
 
+    SYNTHETIC_ITEM_ID_COLUMN = "__synthetic_item_id"
+    SYNTHETIC_ITEM_ID_VALUE = "item_0"
+
     # Input validation
     for param, value in (
         ("bucket_name", bucket_name),
         ("file_key", file_key),
         ("workspace_path", workspace_path),
         ("target", target),
-        ("id_column", id_column),
         ("timestamp_column", timestamp_column),
     ):
         if not isinstance(value, str) or not value.strip():
             raise ValueError(f"{param} must be a non-empty string.")
+    if not isinstance(id_column, str):
+        raise ValueError("id_column must be a string.")
     if selection_train_size <= 0 or selection_train_size >= 1:
         raise ValueError("selection_train_size must be in a range 0 to 1.")
 
@@ -302,17 +307,39 @@ def timeseries_data_loader(
         )
         df = load_timeseries_data_truncate(bucket_name, file_key, MAX_SIZE_BYTES, PANDAS_CHUNK_SIZE)
 
-        required_columns = {id_column, timestamp_column, target}
-        missing_columns = required_columns - set(df.columns)
-        if missing_columns:
-            raise ValueError(
-                f"Missing required columns in dataset: {missing_columns}. Available columns: {list(df.columns)}"
+        if not id_column.strip():
+            # Two-column mode: dataset must have exactly timestamp + target columns.
+            required_columns = {timestamp_column, target}
+            missing_columns = required_columns - set(df.columns)
+            if missing_columns:
+                raise ValueError(
+                    f"Missing required columns in dataset: {missing_columns}. Available columns: {list(df.columns)}"
+                )
+            if len(df.columns) != 2:
+                raise ValueError(
+                    f"When id_column is not provided, the dataset must have exactly 2 columns "
+                    f"(timestamp + target), but found {len(df.columns)} columns: {list(df.columns)}. "
+                    f"Provide id_column to identify the series column for datasets with more than 2 columns."
+                )
+            df[SYNTHETIC_ITEM_ID_COLUMN] = SYNTHETIC_ITEM_ID_VALUE
+            id_column = SYNTHETIC_ITEM_ID_COLUMN
+            logger.info(
+                "Two-column dataset detected; injected synthetic item ID column %r with value %r.",
+                SYNTHETIC_ITEM_ID_COLUMN,
+                SYNTHETIC_ITEM_ID_VALUE,
             )
+        else:
+            required_columns = {id_column, timestamp_column, target}
+            missing_columns = required_columns - set(df.columns)
+            if missing_columns:
+                raise ValueError(
+                    f"Missing required columns in dataset: {missing_columns}. Available columns: {list(df.columns)}"
+                )
 
         if len(df) == 0:
             raise ValueError(
                 "The loaded dataset has no data rows. Provide at least one row per time series "
-                f"with columns {sorted(required_columns)}."
+                f"with columns {sorted({id_column, timestamp_column, target})}."
             )
 
         df = _clean_timeseries_dataframe(df, id_column, timestamp_column, logger)
@@ -446,12 +473,14 @@ def timeseries_data_loader(
             sample_rows=str,
             models_selection_train_data_path=str,
             extra_train_data_path=str,
+            effective_id_column=str,
         )(
             sample_config=sample_config,
             split_config=split_config,
             sample_rows=sample_rows,
             models_selection_train_data_path=str(selection_path),
             extra_train_data_path=str(extra_path),
+            effective_id_column=id_column,
         )
 
 

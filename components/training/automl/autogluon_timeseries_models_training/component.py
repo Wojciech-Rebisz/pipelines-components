@@ -326,25 +326,29 @@ def autogluon_timeseries_models_training(
                 case _:
                     return "string"
 
+        SYNTHETIC_ITEM_ID_COLUMN = "__synthetic_item_id"
+
         def _build_timeseries_inference_block():
             try:
                 covariates = known_covariates_names or []
+                is_synthetic_id = id_column == SYNTHETIC_ITEM_ID_COLUMN
 
                 def _cov_datatype(col):
                     return (
                         _dtype_to_datatype(full_train_ts_df[col].dtype) if col in full_train_ts_df.columns else "string"
                     )
 
-                instance_fields = [
-                    {"name": id_column, "datatype": "string", "role": "id", "required": True},
-                    {"name": timestamp_column, "datatype": "string", "role": "timestamp", "required": True},
-                    {"name": target, "datatype": "number", "role": "target", "required": True},
-                ]
-                sample_instance = {
-                    id_column: "<string>",
-                    timestamp_column: "<string>",
-                    target: "<number>",
-                }
+                instance_fields = []
+                sample_instance = {}
+                if not is_synthetic_id:
+                    instance_fields.append({"name": id_column, "datatype": "string", "role": "id", "required": True})
+                    sample_instance[id_column] = "<string>"
+                instance_fields.append(
+                    {"name": timestamp_column, "datatype": "string", "role": "timestamp", "required": True}
+                )
+                sample_instance[timestamp_column] = "<string>"
+                instance_fields.append({"name": target, "datatype": "number", "role": "target", "required": True})
+                sample_instance[target] = "<number>"
                 for col in covariates:
                     dt = _cov_datatype(col)
                     instance_fields.append({"name": col, "datatype": dt, "role": "known_covariate", "required": True})
@@ -358,11 +362,15 @@ def autogluon_timeseries_models_training(
                 payload = {"instances": [sample_instance]}
 
                 if covariates:
-                    cov_fields = [
-                        {"name": id_column, "datatype": "string", "role": "id", "required": True},
-                        {"name": timestamp_column, "datatype": "string", "role": "timestamp", "required": True},
-                    ]
-                    sample_cov = {id_column: "<string>", timestamp_column: "<string>"}
+                    cov_fields = []
+                    sample_cov = {}
+                    if not is_synthetic_id:
+                        cov_fields.append({"name": id_column, "datatype": "string", "role": "id", "required": True})
+                        sample_cov[id_column] = "<string>"
+                    cov_fields.append(
+                        {"name": timestamp_column, "datatype": "string", "role": "timestamp", "required": True}
+                    )
+                    sample_cov[timestamp_column] = "<string>"
                     for col in covariates:
                         dt = _cov_datatype(col)
                         cov_fields.append({"name": col, "datatype": dt, "role": "known_covariate", "required": True})
