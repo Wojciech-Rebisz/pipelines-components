@@ -436,6 +436,7 @@ def autogluon_timeseries_models_training(
                     )
 
                 # Save additional metadata about the selected model
+                is_synthetic_id = id_column == SYNTHETIC_ITEM_ID_COLUMN
                 predictor_metadata = {
                     "model_name": model_name_full,
                     "base_model": model_name,
@@ -445,6 +446,7 @@ def autogluon_timeseries_models_training(
                     "id_column": id_column,
                     "timestamp_column": timestamp_column,
                     "known_covariates_names": known_covariates_names or [],
+                    "uses_synthetic_id": is_synthetic_id,
                 }
                 predictor_output.mkdir(parents=True, exist_ok=True)
                 with (predictor_output / "predictor_metadata.json").open("w", encoding="utf-8") as f:

@@ -93,6 +93,8 @@ def timeseries_data_loader(
             raise ValueError(f"{param} must be a non-empty string.")
     if not isinstance(id_column, str):
         raise ValueError("id_column must be a string.")
+    if id_column and not id_column.strip():
+        raise ValueError("id_column must be an empty string or a non-empty column name (whitespace-only values are not allowed).")
     if selection_train_size <= 0 or selection_train_size >= 1:
         raise ValueError("selection_train_size must be in a range 0 to 1.")
 
@@ -307,7 +309,7 @@ def timeseries_data_loader(
         )
         df = load_timeseries_data_truncate(bucket_name, file_key, MAX_SIZE_BYTES, PANDAS_CHUNK_SIZE)
 
-        if not id_column.strip():
+        if id_column == "":
             # Two-column mode: dataset must have exactly timestamp + target columns.
             required_columns = {timestamp_column, target}
             missing_columns = required_columns - set(df.columns)

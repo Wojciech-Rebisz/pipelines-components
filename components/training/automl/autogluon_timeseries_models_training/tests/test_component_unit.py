@@ -1255,6 +1255,7 @@ class TestPredictorMetadata:
             "id_column": "product_id",
             "timestamp_column": "date",
             "known_covariates_names": [],
+            "uses_synthetic_id": False,
         }
 
     @mock.patch("pandas.read_csv")
@@ -1555,6 +1556,10 @@ class TestTimeseriesInferenceBlock:
 
         assert "known_covariates" not in schema
         assert "known_covariates" not in payload
+
+        pred_metadata_path = Path(models_artifact.path) / "DeepAR_FULL" / "predictor" / "predictor_metadata.json"
+        pred_metadata = json.loads(pred_metadata_path.read_text())
+        assert pred_metadata["uses_synthetic_id"] is True
 
     @mock.patch("pandas.read_csv")
     @mock.patch("pandas.concat")

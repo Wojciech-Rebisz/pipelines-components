@@ -604,6 +604,23 @@ class TestTimeseriesDataLoaderUnitTests:
         assert "inf" not in all_targets
         assert len(all_targets) >= MIN_VALID_RECORDS
 
+    @mock.patch.dict(os.environ, mocked_env_variables, clear=True)
+    def test_whitespace_only_id_column_raises(self, tmp_path):
+        """Whitespace-only id_column is rejected (only empty string or real column name allowed)."""
+        csv_body = _timeseries_csv()
+        sampled_test = _make_test_artifact(tmp_path)
+        with _mock_boto3_and_pandas(get_object_return={"Body": io.BytesIO(csv_body.encode("utf-8"))}):
+            with pytest.raises(ValueError, match="whitespace-only values are not allowed"):
+                timeseries_data_loader.python_func(
+                    file_key="ts.csv",
+                    bucket_name="b",
+                    workspace_path=str(tmp_path),
+                    target="target",
+                    id_column="   ",
+                    timestamp_column="timestamp",
+                    sampled_test_dataset=sampled_test,
+                )
+
 
 class TestTimeseriesDataLoaderScenarioMatrix:
     """Scenario tests inspired by fixture-driven and ordering-invariant patterns."""
