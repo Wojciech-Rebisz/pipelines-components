@@ -34,8 +34,8 @@ to a single combined ``models_artifact``.
 | `train_data_bucket_name` | `str` | `None` | S3-compatible bucket name containing the time series data file. |
 | `train_data_file_key` | `str` | `None` | S3 object key of the data file (CSV or Parquet). File must include columns for item_id, timestamp, and target; optional columns for known covariates. |
 | `target` | `str` | `None` | Name of the column containing the numeric values to forecast. Corresponds to :attr:`~autogluon.timeseries.TimeSeriesDataFrame` target column. |
-| `id_column` | `str` | `None` | Name of the column that identifies each time series (e.g. product_id, store_id). Passed as ``id_column`` when constructing TimeSeriesDataFrame; result uses ``item_id``. |
 | `timestamp_column` | `str` | `None` | Name of the column containing the timestamp/datetime for each observation. Passed as ``timestamp_column`` when constructing TimeSeriesDataFrame; result uses ``timestamp`` as the second index level. |
+| `id_column` | `str` | `""` | Name of the column that identifies each time series (e.g. product_id, store_id). Passed as ``id_column`` when constructing TimeSeriesDataFrame; result uses ``item_id``. |
 | `known_covariates_names` | `List[str]` | `[]` | Column names known in advance for the forecast horizon (e.g. holidays, promotions). Defaults to ``[]`` (no known covariates). See :attr:`~autogluon.timeseries.TimeSeriesPredictor.known_covariates_names`. |
 | `prediction_length` | `int` | `1` | Number of time steps to forecast (horizon length). Positive integer (default: 1). |
 | `top_n` | `int` | `3` | Number of top models to select for the leaderboard and output (default: 3). |
