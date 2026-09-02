@@ -26,12 +26,6 @@ temporal** split on ``id_column`` / ``timestamp_column``: default **80/20** trai
 2. **Model generation + full refit** (``autogluon_timeseries_models_training``): Trains multiple AutoGluon TimeSeries models on the selection split, picks top ``top_n``, and refits each selected model on the full train portion (**selection + extra** splits). The component writes all refitted models
 to a single combined ``models_artifact``.
 
-### Two-column (timestamp + target) dataset support
-
-When `id_column=""` (empty string, default), the pipeline supports **single-item time series** datasets with only timestamp and target columns. The data loader automatically injects a synthetic item ID (`__synthetic_item_id = "item_0"`) during training. The deployed model's inference schema excludes this synthetic column — users send only timestamp + target in prediction requests.
-
-For multi-item forecasting or datasets with 3+ columns, provide an explicit `id_column` value (e.g., `"product_id"`).
-
 ## Inputs 📥
 
 | Parameter | Type | Default | Description |
@@ -41,7 +35,7 @@ For multi-item forecasting or datasets with 3+ columns, provide an explicit `id_
 | `train_data_file_key` | `str` | `None` | S3 object key of the data file (CSV or Parquet). File must include columns for item_id, timestamp, and target; optional columns for known covariates. |
 | `target` | `str` | `None` | Name of the column containing the numeric values to forecast. Corresponds to :attr:`~autogluon.timeseries.TimeSeriesDataFrame` target column. |
 | `timestamp_column` | `str` | `None` | Name of the column containing the timestamp/datetime for each observation. Passed as ``timestamp_column`` when constructing TimeSeriesDataFrame; result uses ``timestamp`` as the second index level. |
-| `id_column` | `str` | `""` | Name of the column that identifies each time series (e.g. product_id, store_id). Empty string (`""`) activates two-column mode with synthetic ID injection for single-item forecasting. |
+| `id_column` | `str` | `""` | Name of the column that identifies each time series (e.g. product_id, store_id). Passed as ``id_column`` when constructing TimeSeriesDataFrame; result uses ``item_id``. |
 | `known_covariates_names` | `List[str]` | `[]` | Column names known in advance for the forecast horizon (e.g. holidays, promotions). Defaults to ``[]`` (no known covariates). See :attr:`~autogluon.timeseries.TimeSeriesPredictor.known_covariates_names`. |
 | `prediction_length` | `int` | `1` | Number of time steps to forecast (horizon length). Positive integer (default: 1). |
 | `top_n` | `int` | `3` | Number of top models to select for the leaderboard and output (default: 3). |

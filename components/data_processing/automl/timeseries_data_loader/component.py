@@ -53,7 +53,9 @@ def timeseries_data_loader(
         bucket_name: S3 bucket name containing the file.
         workspace_path: PVC workspace directory where train CSVs will be written.
         target: Name of the target column to forecast.
-        id_column: Name of the column identifying each time series (item_id).
+        id_column: Name of the column identifying each time series (item_id). Pass an empty
+            string ("") for single-series two-column datasets (timestamp + target only);
+            the loader will inject a synthetic ID column (__synthetic_item_id) with value "item_0".
         timestamp_column: Name of the timestamp/datetime column.
         sampled_test_dataset: Output dataset artifact for the test split.
         component_status: Output artifact containing stage-level progress tracking for this component.
@@ -94,7 +96,9 @@ def timeseries_data_loader(
     if not isinstance(id_column, str):
         raise ValueError("id_column must be a string.")
     if id_column and not id_column.strip():
-        raise ValueError("id_column must be an empty string or a non-empty column name (whitespace-only values are not allowed).")
+        raise ValueError(
+            "id_column must be an empty string or a non-empty column name (whitespace-only values are not allowed)."
+        )
     if selection_train_size <= 0 or selection_train_size >= 1:
         raise ValueError("selection_train_size must be in a range 0 to 1.")
 

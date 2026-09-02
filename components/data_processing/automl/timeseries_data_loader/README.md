@@ -14,16 +14,6 @@ The test set is written to S3 artifact, while train CSVs are written to the PVC 
 
 After cleansing, at least **100** valid records must remain; otherwise the component fails with a clear error so downstream AutoGluon training does not run on datasets too small to split reliably.
 
-### Two-column (timestamp + target) dataset support
-
-When `id_column=""` (empty string), the component operates in **two-column mode**:
-- Dataset must have exactly 2 columns: `timestamp_column` and `target`
-- A synthetic item ID column (`__synthetic_item_id`) is automatically injected with value `item_0`
-- The `effective_id_column` output returns `"__synthetic_item_id"` (used by downstream training)
-- All output CSVs include the synthetic column for AutoGluon compatibility
-
-This mode enables single-item time series forecasting without requiring users to manually add an item ID column. For datasets with 3+ columns or multi-item forecasting, provide an explicit `id_column` value.
-
 ## Inputs 📥
 
 | Parameter | Type | Default | Description |
@@ -35,19 +25,14 @@ This mode enables single-item time series forecasting without requiring users to
 | `timestamp_column` | `str` | `None` | Name of the timestamp/datetime column. |
 | `sampled_test_dataset` | `dsl.Output[dsl.Dataset]` | `None` | Output dataset artifact for the test split. |
 | `component_status` | `dsl.Output[dsl.Artifact]` | `None` | Output artifact containing stage-level progress tracking for this component. |
-| `id_column` | `str` | `""` | Name of the column identifying each time series. Empty string (`""`) activates two-column mode with synthetic ID injection. |
+| `id_column` | `str` | `""` | Name of the column identifying each time series (item_id). Pass an empty string ("") for single-series two-column datasets (timestamp + target only); the loader will inject a synthetic ID column (__synthetic_item_id) with value "item_0". |
 | `selection_train_size` | `float` | `0.3` | Fraction of train portion for model selection (default: 0.3). |
 
 ## Outputs 📤
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| `sample_config` | `dict` | Sampling metadata (method, total_rows_loaded). |
-| `split_config` | `dict` | Split parameters (test_size, selection_train_size). |
-| `sample_rows` | `str` | JSON array of 5 sample rows from the loaded data. |
-| `models_selection_train_data_path` | `str` | Path to selection train CSV (for model selection phase). |
-| `extra_train_data_path` | `str` | Path to extra train CSV (for final refit phase). |
-| `effective_id_column` | `str` | Actual item ID column name used in output CSVs. Returns `"__synthetic_item_id"` in two-column mode, otherwise returns the input `id_column` value. |
+| Output | `NamedTuple('outputs', sample_config=dict, split_config=dict, sample_rows=str, models_selection_train_data_path=str, extra_train_data_path=str, effective_id_column=str)` | sample_config, split_config, sample_rows, models_selection_train_data_path, extra_train_data_path. |
 
 ## Usage Examples 🧪
 

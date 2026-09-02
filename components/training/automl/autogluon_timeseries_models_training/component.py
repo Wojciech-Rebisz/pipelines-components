@@ -327,11 +327,11 @@ def autogluon_timeseries_models_training(
                     return "string"
 
         SYNTHETIC_ITEM_ID_COLUMN = "__synthetic_item_id"
+        is_synthetic_id = id_column == SYNTHETIC_ITEM_ID_COLUMN
 
         def _build_timeseries_inference_block():
             try:
                 covariates = known_covariates_names or []
-                is_synthetic_id = id_column == SYNTHETIC_ITEM_ID_COLUMN
 
                 def _cov_datatype(col):
                     return (
@@ -436,7 +436,6 @@ def autogluon_timeseries_models_training(
                     )
 
                 # Save additional metadata about the selected model
-                is_synthetic_id = id_column == SYNTHETIC_ITEM_ID_COLUMN
                 predictor_metadata = {
                     "model_name": model_name_full,
                     "base_model": model_name,
