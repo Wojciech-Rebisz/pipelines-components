@@ -26,6 +26,7 @@ def timeseries_data_loader(
     models_selection_train_data_path=str,
     extra_train_data_path=str,
     effective_id_column=str,
+    uses_synthetic_id=bool,
 ):
     """Load and split timeseries data from S3 for AutoGluon training.
 
@@ -95,7 +96,9 @@ def timeseries_data_loader(
             raise ValueError(f"{param} must be a non-empty string.")
     if not isinstance(id_column, str):
         raise ValueError("id_column must be a string.")
-    if id_column and not id_column.strip():
+    if id_column == "":
+        pass  # Empty string is valid for two-column datasets
+    elif not id_column.strip():
         raise ValueError(
             "id_column must be an empty string or a non-empty column name (whitespace-only values are not allowed)."
         )
@@ -104,6 +107,13 @@ def timeseries_data_loader(
 
     if file_key.startswith("/") or file_key.endswith("/") or "//" in file_key:
         raise ValueError("file_key must be a valid S3 object key and must not start/end with '/' or contain '//'.")
+
+    # Constrain workspace_path to prevent path traversal
+    if ".." in Path(workspace_path).parts:
+        raise ValueError(f"workspace_path must not contain '..' components; got {workspace_path!r}")
+    workspace_path_resolved = Path(workspace_path).resolve()
+    if not workspace_path_resolved.is_absolute():
+        raise ValueError(f"workspace_path must be an absolute path; got {workspace_path!r}")
 
     from kfp_components.components.training.automl.shared.component_status import ComponentStatusTracker
 
@@ -313,6 +323,7 @@ def timeseries_data_loader(
         )
         df = load_timeseries_data_truncate(bucket_name, file_key, MAX_SIZE_BYTES, PANDAS_CHUNK_SIZE)
 
+        uses_synthetic_id = False
         if id_column == "":
             # Two-column mode: dataset must have exactly timestamp + target columns.
             required_columns = {timestamp_column, target}
@@ -329,6 +340,7 @@ def timeseries_data_loader(
                 )
             df[SYNTHETIC_ITEM_ID_COLUMN] = SYNTHETIC_ITEM_ID_VALUE
             id_column = SYNTHETIC_ITEM_ID_COLUMN
+            uses_synthetic_id = True
             logger.info(
                 "Two-column dataset detected; injected synthetic item ID column %r with value %r.",
                 SYNTHETIC_ITEM_ID_COLUMN,
@@ -480,6 +492,7 @@ def timeseries_data_loader(
             models_selection_train_data_path=str,
             extra_train_data_path=str,
             effective_id_column=str,
+            uses_synthetic_id=bool,
         )(
             sample_config=sample_config,
             split_config=split_config,
@@ -487,6 +500,7 @@ def timeseries_data_loader(
             models_selection_train_data_path=str(selection_path),
             extra_train_data_path=str(extra_path),
             effective_id_column=id_column,
+            uses_synthetic_id=uses_synthetic_id,
         )
 
 

@@ -769,6 +769,7 @@ class TestTimeseriesDataLoaderScenarioMatrix:
         """Standard three-column path returns the user-provided id_column as effective_id_column."""
         result, _ = _run_loader(tmp_path, _timeseries_csv())
         assert result.effective_id_column == "item_id"
+        assert result.uses_synthetic_id is False
 
 
 class TestTwoColumnSyntheticItemId:
@@ -780,6 +781,7 @@ class TestTwoColumnSyntheticItemId:
         result, sampled_test = _run_loader(tmp_path, _two_column_timeseries_csv(), id_column="")
 
         assert result.effective_id_column == "__synthetic_item_id"
+        assert result.uses_synthetic_id is True
 
         selection_rows = _read_csv_rows(result.models_selection_train_data_path)
         extra_rows = _read_csv_rows(result.extra_train_data_path)
@@ -846,6 +848,7 @@ class TestTwoColumnSyntheticItemId:
         result, sampled_test = _run_loader(tmp_path, _timeseries_csv(), id_column="item_id")
 
         assert result.effective_id_column == "item_id"
+        assert result.uses_synthetic_id is False
 
         selection_rows = _read_csv_rows(result.models_selection_train_data_path)
         assert "__synthetic_item_id" not in selection_rows[0]

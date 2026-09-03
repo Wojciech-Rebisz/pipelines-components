@@ -52,6 +52,9 @@ def autogluon_timeseries_training_pipeline(
     temporal holdout, refits the top models on the full train portion (selection + extra splits),
     and aggregates metrics into a leaderboard.
 
+    **API breaking change:** Parameter order changed: `timestamp_column` now precedes `id_column`.
+    Update any positional calls to use keyword arguments to avoid errors.
+
     **Compiled pipeline encoding:** Keep this module ASCII-only (no Unicode in docstrings or
     string literals). Some deployments persist compiled pipeline YAML in MySQL ``utf8`` columns,
     which reject multi-byte characters.
@@ -89,11 +92,13 @@ def autogluon_timeseries_training_pipeline(
             columns for item_id, timestamp, and target; optional columns for known covariates.
         target: Name of the column containing the numeric values to forecast. Corresponds to
             :attr:`~autogluon.timeseries.TimeSeriesDataFrame` target column.
-        id_column: Name of the column that identifies each time series (e.g. product_id, store_id).
-            Passed as ``id_column`` when constructing TimeSeriesDataFrame; result uses ``item_id``.
         timestamp_column: Name of the column containing the timestamp/datetime for each observation.
             Passed as ``timestamp_column`` when constructing TimeSeriesDataFrame; result uses
             ``timestamp`` as the second index level.
+        id_column: Name of the column that identifies each time series (e.g. product_id, store_id).
+            Pass an empty string ("") for single-series two-column datasets (timestamp + target only);
+            the loader will inject a synthetic ID column. Passed as ``id_column`` when constructing
+            TimeSeriesDataFrame; result uses ``item_id``.
         known_covariates_names: Column names known in advance for the forecast horizon
             (e.g. holidays, promotions). Defaults to ``[]`` (no known covariates). See
             :attr:`~autogluon.timeseries.TimeSeriesPredictor.known_covariates_names`.
@@ -181,6 +186,7 @@ def autogluon_timeseries_training_pipeline(
         known_covariates_names=known_covariates_names,
         pipeline_name=dsl.PIPELINE_JOB_RESOURCE_NAME_PLACEHOLDER,
         run_id=dsl.PIPELINE_JOB_ID_PLACEHOLDER,
+        uses_synthetic_id=data_loader_task.outputs["uses_synthetic_id"],
         sample_rows=data_loader_task.outputs["sample_rows"],
         sampling_config=data_loader_task.outputs["sample_config"],
         split_config=data_loader_task.outputs["split_config"],

@@ -22,6 +22,7 @@ def autogluon_timeseries_models_training(
     extra_train_data_path: str,
     html_artifact: dsl.Output[dsl.HTML],
     component_status: dsl.Output[dsl.Artifact],
+    uses_synthetic_id: bool = False,
     sample_rows: str = "[]",
     sampling_config: Optional[dict] = None,
     split_config: Optional[dict] = None,
@@ -60,12 +61,13 @@ def autogluon_timeseries_models_training(
         models_artifact: Combined output artifact containing all refitted models.
         extra_train_data_path: Path to extra train split for full refit.
         html_artifact: Output HTML artifact containing the ranked leaderboard page.
+        component_status: Output artifact containing stage-level progress tracking for this component.
+        uses_synthetic_id: True if the loader injected a synthetic ID column for two-column datasets.
         sample_rows: Sample rows JSON string used in generated notebook placeholders.
         sampling_config: Optional sampling config stored in artifact metadata.
         split_config: Optional split config stored in artifact metadata.
         prediction_length: Forecast horizon (number of timesteps).
         known_covariates_names: Optional list of known covariate column names.
-        component_status: Output artifact containing stage-level progress tracking for this component.
         preset: Training quality tier. ``"speed"`` (default) or ``"balanced"``
             (may run more than 2x longer).
         eval_metric: Metric for model ranking (e.g. ``"mean_absolute_scaled_error"``,
@@ -326,9 +328,6 @@ def autogluon_timeseries_models_training(
                 case _:
                     return "string"
 
-        SYNTHETIC_ITEM_ID_COLUMN = "__synthetic_item_id"
-        is_synthetic_id = id_column == SYNTHETIC_ITEM_ID_COLUMN
-
         def _build_timeseries_inference_block():
             try:
                 covariates = known_covariates_names or []
@@ -340,7 +339,7 @@ def autogluon_timeseries_models_training(
 
                 instance_fields = []
                 sample_instance = {}
-                if not is_synthetic_id:
+                if not uses_synthetic_id:
                     instance_fields.append({"name": id_column, "datatype": "string", "role": "id", "required": True})
                     sample_instance[id_column] = "<string>"
                 instance_fields.append(
@@ -364,7 +363,7 @@ def autogluon_timeseries_models_training(
                 if covariates:
                     cov_fields = []
                     sample_cov = {}
-                    if not is_synthetic_id:
+                    if not uses_synthetic_id:
                         cov_fields.append({"name": id_column, "datatype": "string", "role": "id", "required": True})
                         sample_cov[id_column] = "<string>"
                     cov_fields.append(
@@ -445,7 +444,7 @@ def autogluon_timeseries_models_training(
                     "id_column": id_column,
                     "timestamp_column": timestamp_column,
                     "known_covariates_names": known_covariates_names or [],
-                    "uses_synthetic_id": is_synthetic_id,
+                    "uses_synthetic_id": uses_synthetic_id,
                 }
                 predictor_output.mkdir(parents=True, exist_ok=True)
                 with (predictor_output / "predictor_metadata.json").open("w", encoding="utf-8") as f:
