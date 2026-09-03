@@ -32,7 +32,7 @@ After cleansing, at least **100** valid records must remain; otherwise the compo
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| Output | `NamedTuple('outputs', sample_config=dict, split_config=dict, sample_rows=str, models_selection_train_data_path=str, extra_train_data_path=str, effective_id_column=str)` | sample_config, split_config, sample_rows, models_selection_train_data_path, extra_train_data_path. |
+| Output | `NamedTuple('outputs', sample_config=dict, split_config=dict, sample_rows=str, models_selection_train_data_path=str, extra_train_data_path=str, effective_id_column=str, uses_synthetic_id=bool)` | sample_config, split_config, sample_rows, models_selection_train_data_path, extra_train_data_path. |
 
 ## Usage Examples 🧪
 

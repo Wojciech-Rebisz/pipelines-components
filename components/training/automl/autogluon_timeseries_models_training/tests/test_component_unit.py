@@ -1534,6 +1534,7 @@ class TestTimeseriesInferenceBlock:
             prediction_length=7,
             html_artifact=html_artifact,
             component_status=_DEFAULT_COMPONENT_STATUS,
+            uses_synthetic_id=True,
         )
 
         model_json_path = Path(models_artifact.path) / "DeepAR_FULL" / "model.json"

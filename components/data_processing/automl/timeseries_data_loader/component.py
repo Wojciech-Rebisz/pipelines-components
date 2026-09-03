@@ -108,12 +108,19 @@ def timeseries_data_loader(
     if file_key.startswith("/") or file_key.endswith("/") or "//" in file_key:
         raise ValueError("file_key must be a valid S3 object key and must not start/end with '/' or contain '//'.")
 
-    # Constrain workspace_path to prevent path traversal
-    if ".." in Path(workspace_path).parts:
-        raise ValueError(f"workspace_path must not contain '..' components; got {workspace_path!r}")
-    workspace_path_resolved = Path(workspace_path).resolve()
-    if not workspace_path_resolved.is_absolute():
+    # Validate workspace_path to prevent path traversal
+    workspace_path_obj = Path(workspace_path)
+    if not workspace_path_obj.is_absolute():
         raise ValueError(f"workspace_path must be an absolute path; got {workspace_path!r}")
+
+    workspace_path_resolved = workspace_path_obj.resolve()
+    try:
+        workspace_path_resolved.relative_to(workspace_path_obj)
+    except ValueError:
+        raise ValueError(
+            f"workspace_path resolves outside the trusted workspace boundary: "
+            f"{workspace_path!r} -> {workspace_path_resolved}"
+        )
 
     from kfp_components.components.training.automl.shared.component_status import ComponentStatusTracker
 
@@ -323,6 +330,17 @@ def timeseries_data_loader(
         )
         df = load_timeseries_data_truncate(bucket_name, file_key, MAX_SIZE_BYTES, PANDAS_CHUNK_SIZE)
 
+        # Reject collision with reserved synthetic-ID column (CWE-20)
+        # Check if any user-specified column uses the reserved name before we try to inject it.
+        reserved_columns = {timestamp_column, target}
+        if id_column:
+            reserved_columns.add(id_column)
+        if SYNTHETIC_ITEM_ID_COLUMN in reserved_columns:
+            raise ValueError(
+                f"Column name {SYNTHETIC_ITEM_ID_COLUMN!r} is reserved for synthetic ID injection. "
+                f"Please rename your timestamp, target, or id_column to avoid collision."
+            )
+
         uses_synthetic_id = False
         if id_column == "":
             # Two-column mode: dataset must have exactly timestamp + target columns.
@@ -337,6 +355,12 @@ def timeseries_data_loader(
                     f"When id_column is not provided, the dataset must have exactly 2 columns "
                     f"(timestamp + target), but found {len(df.columns)} columns: {list(df.columns)}. "
                     f"Provide id_column to identify the series column for datasets with more than 2 columns."
+                )
+            # Check for collision with existing columns in the dataset
+            if SYNTHETIC_ITEM_ID_COLUMN in df.columns:
+                raise ValueError(
+                    f"Dataset already contains a column named {SYNTHETIC_ITEM_ID_COLUMN!r}. "
+                    f"This name is reserved for synthetic ID injection. Please rename the existing column."
                 )
             df[SYNTHETIC_ITEM_ID_COLUMN] = SYNTHETIC_ITEM_ID_VALUE
             id_column = SYNTHETIC_ITEM_ID_COLUMN
@@ -373,8 +397,8 @@ def timeseries_data_loader(
         status.record("prepare_data", "completed", rows=n_valid)
         status.record("split_and_export", "started")
 
-        # Create workspace datasets directory
-        datasets_dir = Path(workspace_path) / "datasets"
+        # Create workspace datasets directory (use validated resolved path)
+        datasets_dir = workspace_path_resolved / "datasets"
         datasets_dir.mkdir(parents=True, exist_ok=True)
 
         # Stable ordering for downstream I/O (redundant if cleanse already sorted; kept for clarity)
