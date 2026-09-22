@@ -1,8 +1,9 @@
---index-url https://pypi.org/simple
+--index-url https://console.redhat.com/api/pypi/public-rhai/rhoai/3.6-EA2/cpu-ubi9-test/simple
 
 # Minimal placeholder dependencies for odh-autorag-inference
 # TODO: Add actual inference dependencies once deployment implementation is complete
 
-# Core AutoRAG inference dependencies (placeholder versions)
-ai4rag>=0.14.0
-
+# Core AutoRAG inference dependencies
+ai4rag==0.17.0 \
+    --hash=sha256:f904e1b07fc54d6ebf4ae3cb500fcec4b3fd4fcff863daa244dd94aa83c8284c4
+    # via -r requirements.in
