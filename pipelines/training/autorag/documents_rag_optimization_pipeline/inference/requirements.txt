@@ -5,5 +5,5 @@
 
 # Core AutoRAG inference dependencies
 ai4rag==0.17.0 \
-    --hash=sha256:f904e1b07fc54d6ebf4ae3cb500fcec4b3fd4fcff863daa244dd94aa83c8284c4
+    --hash=sha256:f904e1b07fc54d6ebf4ae3cb500fcec4b3fd4fcff863daa244dd94aa83c8284c
     # via -r requirements.in
