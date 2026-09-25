@@ -444,12 +444,12 @@ def rag_templates_optimization(
             # the stable task-artifact root. The default path assigned to
             # the starter-kit output may point to a separate output directory.
             rag_patterns_path = Path(rag_patterns.path)
-            starter_kit_path = rag_patterns_path.parent / "starter_kit.zip"
+            starter_kit_path = rag_patterns_path.parent / "starter_kit" / "starter_kit.zip"
             starter_kit_path.parent.mkdir(parents=True, exist_ok=True)
 
             rag_patterns_uri = str(rag_patterns.uri).rstrip("/")
             artifact_root_uri = rag_patterns_uri.rsplit("/", 1)[0] if "/" in rag_patterns_uri else rag_patterns_uri
-            starter_kit.uri = f"{artifact_root_uri}/starter_kit.zip"
+            starter_kit.uri = f"{artifact_root_uri}/starter_kit/starter_kit.zip"
             starter_kit.set_path(str(starter_kit_path))
 
             # Keep the output contract available before ai4rag ships its
